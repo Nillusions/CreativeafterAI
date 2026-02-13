@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate manifest.js from module files
+        run: |
+          cd modules-data
+          echo "// Auto-generated manifest" > manifest.js
+          echo "window.MODULES_MANIFEST = [" >> manifest.js
+          first=true
+          for f in module-*.js; do
+            [ -f "$f" ] || continue
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> manifest.js
+            fi
+            # Extract card-level fields from the JS module file
+            python3 -c "
+          import json, sys, re
+          with open('$f') as fh:
+              text = fh.read()
+          match = re.search(r'window\.LOADED_MODULE\s*=\s*({[\s\S]*});?\s*$', text)
+          if match:
+              m = json.loads(match.group(1))
+              card = {k: m[k] for k in ('id','number','title','tagline','icon','color') if k in m}
+              sys.stdout.write('    ' + json.dumps(card))
+          " >> manifest.js
+          done
+          echo "" >> manifest.js
+          echo "];" >> manifest.js
+          echo "✓ Generated manifest.js"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
