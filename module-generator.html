@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Generator — Creative after AI</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --text: #e0e0e0;
+            --accent: #C8E64E;
+            --border: #333;
+            --input-bg: #1a1a1a;
+            --block-bg: #111;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 40px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        p.subtitle {
+            color: #888;
+            margin-bottom: 32px;
+        }
+
+        .section {
+            background: #141414;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            height: 80px;
+            resize: vertical;
+            margin-top: 4px;
+        }
+
+        /* TOP ACTION BAR */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        .btn-download {
+            background: var(--accent);
+            color: #000;
+            flex: 1;
+        }
+
+        .btn-load {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+        }
+
+        .btn-clear {
+            background: transparent;
+            color: #ff6666;
+            border: 1px solid #ff6666;
+        }
+
+        .btn-add {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            background: #444;
+        }
+
+        .btn-remove {
+            background: transparent;
+            color: #ff6666;
+            border: 1px solid #ff6666;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+            opacity: 0.6;
+        }
+
+        .btn-remove:hover {
+            opacity: 1;
+            background: rgba(255, 100, 100, 0.1);
+        }
+
+        /* Status toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent);
+            color: #000;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* BLOCK EDITOR STYLES */
+        .tab-item {
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            background: #0f0f0f;
+        }
+
+        .tab-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        .blocks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 40px;
+        }
+
+        .content-block {
+            background: var(--block-bg);
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .block-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .block-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        .block-btn:hover {
+            color: #aaa;
+        }
+
+        .add-block-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px dashed #333;
+        }
+
+        .add-block-btn {
+            background: #222;
+            color: #ddd;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .add-block-btn:hover {
+            background: #333;
+            border-color: #666;
+            color: #fff;
+        }
+
+        /* FORMATTING TOOLBAR */
+        .fmt-toolbar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .fmt-btn {
+            background: #222;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .fmt-btn:hover {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        /* List Builder */
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .list-item-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Table column controls */
+        .table-col-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #333;
+        }
+
+        .table-col-controls label {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        .col-count-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #ccc;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .col-count-btn:hover {
+            background: #333;
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .col-count-display {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .table-headers-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .table-headers-row input {
+            flex: 1;
+            font-size: 0.8rem;
+            padding: 6px 8px;
+            background: #1a1a2a;
+            border-color: #444;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Hidden file input */
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Module Generator</h1>
+        <p class="subtitle">Create or edit module content visually, then download the file to push to GitHub.</p>
+
+        <!-- ACTION BAR -->
+        <div class="action-bar">
+            <button class="btn-action btn-download" onclick="downloadModuleFile()">⬇ Download Module File</button>
+            <button class="btn-action btn-load" onclick="document.getElementById('file-input').click()">📂 Load
+                Existing Module</button>
+            <button class="btn-action btn-clear" onclick="clearAll()">✕ Clear</button>
+            <input type="file" id="file-input" accept=".js,.json" onchange="loadModuleFile(event)">
+        </div>
+
+        <!-- METADATA -->
+        <div class="section">
+            <div class="section-title">1. General Info</div>
+            <div class="row">
+                <div class="col">
+                    <label>ID (unique slug)</label>
+                    <input type="text" id="id" placeholder="e.g. visual-storytelling">
+                </div>
+                <div class="col">
+                    <label>Number</label>
+                    <input type="text" id="number" placeholder="e.g. 03">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Title</label>
+                    <input type="text" id="title" placeholder="Module Title">
+                </div>
+                <div class="col">
+                    <label>Tagline</label>
+                    <input type="text" id="tagline" placeholder="Short description">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Icon (Lucide name)</label>
+                    <input type="text" id="icon" placeholder="e.g. pen-tool, layers">
+                </div>
+                <div class="col">
+                    <label>Color (Hex code)</label>
+                    <input type="color" id="color" value="#C8E64E" style="height: 42px; padding: 2px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- INTRO CARDS -->
+        <div class="section">
+            <div class="section-title">2. Intro Cards Content</div>
+            <div class="row">
+                <div class="col">
+                    <label>What you will learn (3 points)</label>
+                    <input type="text" class="learn-point" placeholder="Point 1" style="margin-bottom: 8px;">
+                    <input type="text" class="learn-point" placeholder="Point 2" style="margin-bottom: 8px;">
+                    <input type="text" class="learn-point" placeholder="Point 3">
+                </div>
+                <div class="col">
+                    <label>Who is this for (3 target audiences)</label>
+                    <input type="text" class="who-point" placeholder="Audience 1" style="margin-bottom: 8px;">
+                    <input type="text" class="who-point" placeholder="Audience 2" style="margin-bottom: 8px;">
+                    <input type="text" class="who-point" placeholder="Audience 3">
+                </div>
+            </div>
+        </div>
+
+        <!-- DYNAMIC TABS -->
+        <div class="section">
+            <div class="section-title">
+                3. Content Tabs
+                <button class="btn-add" onclick="addTab()">+ Add New Tab</button>
+            </div>
+            <div id="tabs-container">
+                <!-- Tabs injected here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <template id="block-text">
+        <div class="content-block" data-type="text">
+            <div class="block-header">Text Paragraph <div class="block-actions"><button class="block-btn"
+                        onclick="moveBlock(this, -1)">▲</button><button class="block-btn"
+                        onclick="moveBlock(this, 1)">▼</button><button class="block-btn"
+                        onclick="removeBlock(this)">✕</button></div>
+            </div>
+            <div class="fmt-toolbar">
+                <button class="fmt-btn" type="button" onmousedown="formatText(this, 'strong')"
+                    title="Bold / Highlight">B</button>
+                <button class="fmt-btn" type="button" onmousedown="formatText(this, 'em')" title="Italic">I</button>
+            </div>
+            <textarea placeholder="Write your paragraph here..."></textarea>
+        </div>
+    </template>
+
+    <template id="block-heading">
+        <div class="content-block" data-type="heading">
+            <div class="block-header">Heading <div class="block-actions"><button class="block-btn"
+                        onclick="moveBlock(this, -1)">▲</button><button class="block-btn"
+                        onclick="moveBlock(this, 1)">▼</button><button class="block-btn"
+                        onclick="removeBlock(this)">✕</button></div>
+            </div>
+            <input type="text" placeholder="Section Heading">
+        </div>
+    </template>
+
+    <template id="block-list">
+        <div class="content-block" data-type="list">
+            <div class="block-header">List <div class="block-actions"><button class="block-btn"
+                        onclick="moveBlock(this, -1)">▲</button><button class="block-btn"
+                        onclick="moveBlock(this, 1)">▼</button><button class="block-btn"
+                        onclick="removeBlock(this)">✕</button></div>
+            </div>
+            <div class="list-items">
+                <!-- List items added here -->
+            </div>
+            <button class="btn-add" style="margin-top: 8px;" onclick="addListItem(this)">+ Add Item</button>
+        </div>
+    </template>
+
+    <template id="block-note">
+        <div class="content-block" data-type="note">
+            <div class="block-header">Highlights / Note (Orange Box) <div class="block-actions"><button
+                        class="block-btn" onclick="moveBlock(this, -1)">▲</button><button class="block-btn"
+                        onclick="moveBlock(this, 1)">▼</button><button class="block-btn"
+                        onclick="removeBlock(this)">✕</button></div>
+            </div>
+            <div class="fmt-toolbar">
+                <button class="fmt-btn" type="button" onmousedown="formatText(this, 'strong')" title="Bold">B</button>
+                <button class="fmt-btn" type="button" onmousedown="formatText(this, 'em')" title="Italic">I</button>
+            </div>
+            <textarea placeholder="Highlighted note text..."></textarea>
+        </div>
+    </template>
+
+    <template id="block-table">
+        <div class="content-block" data-type="table" data-cols="2">
+            <div class="block-header">Table <div class="block-actions"><button class="block-btn"
+                        onclick="moveBlock(this, -1)">▲</button><button class="block-btn"
+                        onclick="moveBlock(this, 1)">▼</button><button class="block-btn"
+                        onclick="removeBlock(this)">✕</button></div>
+            </div>
+            <div class="table-col-controls">
+                <label>Columns:</label>
+                <button class="col-count-btn" onclick="changeColCount(this, -1)">−</button>
+                <span class="col-count-display">2</span>
+                <button class="col-count-btn" onclick="changeColCount(this, 1)">+</button>
+            </div>
+            <div class="table-headers-row">
+                <!-- Header inputs generated dynamically -->
+            </div>
+            <div class="list-items">
+                <!-- Data rows added here -->
+            </div>
+            <button class="btn-add" style="margin-top: 8px;" onclick="addTableRow(this)">+ Add Row</button>
+        </div>
+    </template>
+
+    <script>
+        const DEFAULT_TABS = [
+            { key: 'introduction', label: 'Introduction Body' },
+            { key: 'techniques', label: 'Techniques' },
+            { key: 'prompts', label: 'Prompts' },
+            { key: 'tools', label: 'Tools' }
+        ];
+
+        function init() {
+            DEFAULT_TABS.forEach(t => addTab(t.key, t.label));
+        }
+
+        function addTab(key = '', label = '') {
+            const container = document.getElementById('tabs-container');
+            const div = document.createElement('div');
+            div.className = 'tab-item';
+            const isIntro = key === 'introduction';
+
+            div.innerHTML = `
+            <div class="tab-header">
+                <div style="flex: 1; display: flex; gap: 12px; align-items: center;">
+                    <input type="text" class="tab-key" value="${key}" placeholder="tab_key" style="margin:0; width: 150px; font-family: monospace;">
+                    ${isIntro ? '<span style="color:#666; font-size: 0.8rem;">(Required)</span>' : '<button class="btn-remove" onclick="removeTab(this)" style="margin:0">✕</button>'}
+                </div>
+            </div>
+            <div class="blocks-container"></div>
+            <div class="add-block-buttons">
+                <button class="add-block-btn" onclick="addBlock(this, 'heading')">+ Heading</button>
+                <button class="add-block-btn" onclick="addBlock(this, 'text')">+ Text</button>
+                <button class="add-block-btn" onclick="addBlock(this, 'list')">+ List</button>
+                <button class="add-block-btn" onclick="addBlock(this, 'note')">+ Note</button>
+                <button class="add-block-btn" onclick="addBlock(this, 'table')">+ Table</button>
+            </div>
+        `;
+            container.appendChild(div);
+        }
+
+        function removeTab(btn) {
+            if (confirm('Delete this tab?')) btn.closest('.tab-item').remove();
+        }
+
+        // --- TOAST ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // --- FORMATTING ---
+        function formatText(btn, tag) {
+            event.preventDefault();
+            const textarea = btn.closest('.content-block').querySelector('textarea');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+
+            if (start === end) return;
+
+            const selected = text.substring(start, end);
+            const replacement = `<${tag}>${selected}</${tag}>`;
+
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+
+            textarea.selectionStart = start + replacement.length;
+            textarea.selectionEnd = start + replacement.length;
+            textarea.focus();
+        }
+
+        // --- BLOCK FUNCTIONS ---
+
+        function addBlock(btn, type) {
+            const container = btn.closest('.add-block-buttons').previousElementSibling;
+            const template = document.getElementById('block-' + type);
+            if (!template) return;
+            const clone = template.content.cloneNode(true);
+            container.appendChild(clone);
+
+            if (type === 'list') {
+                const listBlock = container.lastElementChild;
+                addListItem(listBlock.querySelector('.btn-add'));
+            }
+            if (type === 'table') {
+                const tableBlock = container.lastElementChild;
+                updateTableColumns(tableBlock);
+                addTableRow(tableBlock.querySelector('.btn-add'));
+            }
+        }
+
+        function removeBlock(btn) {
+            btn.closest('.content-block').remove();
+        }
+
+        function moveBlock(btn, dir) {
+            const block = btn.closest('.content-block');
+            if (dir === -1 && block.previousElementSibling) {
+                block.parentNode.insertBefore(block, block.previousElementSibling);
+            } else if (dir === 1 && block.nextElementSibling) {
+                block.parentNode.insertBefore(block.nextElementSibling, block);
+            }
+        }
+
+        function addListItem(btn) {
+            const listContainer = btn.previousElementSibling;
+            const div = document.createElement('div');
+            div.className = 'list-item-row';
+            div.innerHTML = `
+            <input type="text" placeholder="Title / Bold Text" style="flex: 1;">
+            <input type="text" placeholder="Description" style="flex: 2;">
+            <button class="btn-remove" onclick="this.parentElement.remove()" style="margin:0; width: 20px; height: 32px;">✕</button>
+        `;
+            listContainer.appendChild(div);
+        }
+
+        function addTableRow(btn) {
+            const block = btn.closest('.content-block');
+            const colCount = parseInt(block.getAttribute('data-cols')) || 2;
+            const headers = block.querySelectorAll('.table-headers-row input');
+            const listContainer = btn.previousElementSibling;
+            const div = document.createElement('div');
+            div.className = 'list-item-row';
+            let inputsHtml = '';
+            for (let i = 0; i < colCount; i++) {
+                const placeholder = (headers[i] && headers[i].value) ? headers[i].value : `Column ${i + 1}`;
+                inputsHtml += `<input type="text" placeholder="${placeholder}" style="flex: 1;">`;
+            }
+            inputsHtml += `<button class="btn-remove" onclick="this.parentElement.remove()" style="margin:0; width: 20px; height: 32px;">✕</button>`;
+            div.innerHTML = inputsHtml;
+            listContainer.appendChild(div);
+        }
+
+        function changeColCount(btn, delta) {
+            const block = btn.closest('.content-block');
+            let colCount = parseInt(block.getAttribute('data-cols')) || 2;
+            colCount = Math.max(2, colCount + delta);
+            block.setAttribute('data-cols', colCount);
+            block.querySelector('.col-count-display').textContent = colCount;
+            updateTableColumns(block);
+        }
+
+        function updateTableColumns(block) {
+            const colCount = parseInt(block.getAttribute('data-cols')) || 2;
+            const headersRow = block.querySelector('.table-headers-row');
+            const existingHeaders = headersRow.querySelectorAll('input');
+            const oldValues = Array.from(existingHeaders).map(inp => inp.value);
+
+            // Rebuild header inputs
+            let headersHtml = '';
+            for (let i = 0; i < colCount; i++) {
+                const val = oldValues[i] || '';
+                headersHtml += `<input type="text" placeholder="Header ${i + 1}" value="${val}">`;
+            }
+            headersRow.innerHTML = headersHtml;
+
+            // Update existing data rows to match column count
+            const dataRows = block.querySelectorAll('.list-items .list-item-row');
+            dataRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const currentCount = inputs.length;
+                if (currentCount < colCount) {
+                    // Add missing inputs before the remove button
+                    const removeBtn = row.querySelector('.btn-remove');
+                    for (let i = currentCount; i < colCount; i++) {
+                        const inp = document.createElement('input');
+                        inp.type = 'text';
+                        inp.placeholder = `Column ${i + 1}`;
+                        inp.style.flex = '1';
+                        row.insertBefore(inp, removeBtn);
+                    }
+                } else if (currentCount > colCount) {
+                    // Remove excess inputs from the end
+                    for (let i = currentCount - 1; i >= colCount; i--) {
+                        inputs[i].remove();
+                    }
+                }
+            });
+        }
+
+        // =========================================
+        // BUILD MODULE JSON FROM FORM
+        // =========================================
+        function buildModuleJSON() {
+            const id = document.getElementById('id').value.trim() || 'new-module-' + Date.now();
+            const number = document.getElementById('number').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const tagline = document.getElementById('tagline').value.trim();
+            const icon = document.getElementById('icon').value.trim() || 'circle';
+            const color = document.getElementById('color').value;
+
+            // Intro Cards
+            const learnHtml = Array.from(document.querySelectorAll('.learn-point'))
+                .map(i => i.value ? `<li>${i.value}</li>` : '').join('');
+            const whoHtml = Array.from(document.querySelectorAll('.who-point'))
+                .map(i => i.value ? `<li>${i.value}</li>` : '').join('');
+
+            const introCards = `<div class='intro-header-cards'><div class='intro-card learn'><h4>What you will learn</h4><ul>${learnHtml}</ul></div><div class='intro-card who'><h4>Who is this for</h4><ul>${whoHtml}</ul></div></div>`;
+
+            // Build tabs
+            const tabs = {};
+            const tabItems = document.querySelectorAll('.tab-item');
+
+            tabItems.forEach(item => {
+                const key = item.querySelector('.tab-key').value.trim();
+                if (!key) return;
+
+                let htmlContent = '';
+
+                if (key === 'introduction') {
+                    htmlContent += introCards;
+                }
+
+                const blocks = item.querySelectorAll('.content-block');
+                blocks.forEach(block => {
+                    const type = block.getAttribute('data-type');
+
+                    if (type === 'heading') {
+                        const val = block.querySelector('input').value;
+                        if (val) htmlContent += `<h3>${val}</h3>`;
+                    }
+                    else if (type === 'text') {
+                        const val = block.querySelector('textarea').value;
+                        if (val) htmlContent += `<p>${val}</p>`;
+                    }
+                    else if (type === 'note') {
+                        const val = block.querySelector('textarea').value;
+                        if (val) htmlContent += `<p><em>${val}</em></p>`;
+                    }
+                    else if (type === 'list') {
+                        const rows = block.querySelectorAll('.list-item-row');
+                        let listItems = '';
+                        rows.forEach(row => {
+                            const inputs = row.querySelectorAll('input');
+                            const t = inputs[0].value;
+                            const desc = inputs[1].value;
+                            if (t || desc) {
+                                let text = '';
+                                if (t && desc) text = `<strong>${t}</strong> — ${desc}`;
+                                else if (t) text = `<strong>${t}</strong>`;
+                                else text = desc;
+                                listItems += `<li>${text}</li>`;
+                            }
+                        });
+                        if (listItems) htmlContent += `<ul>${listItems}</ul>`;
+                    }
+                    else if (type === 'table') {
+                        const colCount = parseInt(block.getAttribute('data-cols')) || 2;
+                        const headerInputs = block.querySelectorAll('.table-headers-row input');
+                        const rows = block.querySelectorAll('.list-items .list-item-row');
+
+                        // Build header row
+                        let theadCells = '';
+                        for (let i = 0; i < colCount; i++) {
+                            const hdr = (headerInputs[i] && headerInputs[i].value) || `Column ${i + 1}`;
+                            theadCells += `<th>${hdr}</th>`;
+                        }
+
+                        // Build body rows
+                        let tableRows = '';
+                        rows.forEach(row => {
+                            const inputs = row.querySelectorAll('input');
+                            let hasContent = false;
+                            let cells = '';
+                            for (let i = 0; i < colCount; i++) {
+                                const val = (inputs[i] && inputs[i].value) || '';
+                                if (val) hasContent = true;
+                                if (i === 0) {
+                                    cells += `<td><strong>${val}</strong></td>`;
+                                } else {
+                                    cells += `<td>${val}</td>`;
+                                }
+                            }
+                            if (hasContent) tableRows += `<tr>${cells}</tr>`;
+                        });
+                        if (tableRows) htmlContent += `<table><thead><tr>${theadCells}</tr></thead><tbody>${tableRows}</tbody></table>`;
+                    }
+                });
+
+                tabs[key] = htmlContent;
+            });
+
+            return { id, number, title, tagline, icon, color, tabs };
+        }
+
+        // =========================================
+        // DOWNLOAD MODULE FILE
+        // =========================================
+        function downloadModuleFile() {
+            const module = buildModuleJSON();
+
+            if (!module.id || module.id.startsWith('new-module-')) {
+                showToast('⚠ Please set a module ID first');
+                document.getElementById('id').focus();
+                return;
+            }
+
+            const json = JSON.stringify(module, null, 4);
+            const jsContent = `// Module: ${module.id}\nwindow.LOADED_MODULE = ${json};\n`;
+            const blob = new Blob([jsContent], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `module-${module.id}.js`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast(`✓ Downloaded module-${module.id}.js`);
+        }
+
+        // =========================================
+        // LOAD EXISTING MODULE FILE
+        // =========================================
+        function loadModuleFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    let text = e.target.result;
+
+                    // If it's a .js file, strip the "window.LOADED_MODULE = " wrapper
+                    if (file.name.endsWith('.js')) {
+                        const match = text.match(/window\.LOADED_MODULE\s*=\s*({[\s\S]*});?\s*$/);
+                        if (match) text = match[1];
+                    }
+
+                    const module = JSON.parse(text);
+                    populateForm(module);
+                    showToast(`✓ Loaded: ${module.title || file.name}`);
+                } catch (err) {
+                    showToast('⚠ Failed to parse file');
+                    console.error('Load error:', err);
+                }
+            };
+            reader.readAsText(file);
+
+            // Reset file input so same file can be re-loaded
+            event.target.value = '';
+        }
+
+        // =========================================
+        // POPULATE FORM FROM MODULE JSON
+        // =========================================
+        function populateForm(module) {
+            // Metadata
+            document.getElementById('id').value = module.id || '';
+            document.getElementById('number').value = module.number || '';
+            document.getElementById('title').value = module.title || '';
+            document.getElementById('tagline').value = module.tagline || '';
+            document.getElementById('icon').value = module.icon || '';
+            document.getElementById('color').value = module.color || '#C8E64E';
+
+            // Extract learn/who from intro HTML
+            const introHtml = (module.tabs && module.tabs.introduction) || '';
+            const learnItems = extractListItems(introHtml, 'intro-card learn');
+            const whoItems = extractListItems(introHtml, 'intro-card who');
+
+            const learnInputs = document.querySelectorAll('.learn-point');
+            const whoInputs = document.querySelectorAll('.who-point');
+            learnItems.forEach((item, i) => { if (learnInputs[i]) learnInputs[i].value = item; });
+            whoItems.forEach((item, i) => { if (whoInputs[i]) whoInputs[i].value = item; });
+
+            // Clear existing tabs
+            document.getElementById('tabs-container').innerHTML = '';
+
+            // Recreate tabs from module data
+            if (module.tabs) {
+                for (const [key, html] of Object.entries(module.tabs)) {
+                    addTab(key);
+                    // Note: We don't auto-populate block content from HTML
+                    // because parsing arbitrary HTML back into blocks is complex.
+                    // The tab is created empty for manual re-editing.
+                    // However, we show a helpful note.
+                    const tabItems = document.querySelectorAll('.tab-item');
+                    const lastTab = tabItems[tabItems.length - 1];
+                    const blocksContainer = lastTab.querySelector('.blocks-container');
+
+                    // Add a note showing the existing content
+                    const infoDiv = document.createElement('div');
+                    infoDiv.style.cssText = 'padding: 12px; background: #1a1a0a; border: 1px solid #444; border-radius: 4px; font-size: 0.8rem; color: #999; margin-bottom: 8px;';
+
+                    // Strip intro cards from introduction tab for display
+                    let displayHtml = html;
+                    if (key === 'introduction') {
+                        displayHtml = html.replace(/<div class='intro-header-cards'>[\s\S]*?<\/div><\/div><\/div>/, '').trim();
+                    }
+
+                    if (displayHtml) {
+                        infoDiv.innerHTML = `<strong style="color: #C8E64E;">Existing content loaded.</strong> Add blocks below to replace, or keep as-is by downloading without changes to this tab.<br><details style="margin-top: 8px;"><summary style="cursor: pointer; color: #aaa;">View current HTML</summary><pre style="margin-top: 8px; white-space: pre-wrap; font-size: 0.75rem; color: #888; max-height: 200px; overflow-y: auto;">${displayHtml.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></details>`;
+                        blocksContainer.appendChild(infoDiv);
+                    }
+                }
+            }
+        }
+
+        // Helper: extract <li> items from intro cards HTML
+        function extractListItems(html, className) {
+            const items = [];
+            const regex = new RegExp(`class=['"]${className}['"][^>]*>[\\s\\S]*?<ul>([\\s\\S]*?)<\\/ul>`);
+            const match = html.match(regex);
+            if (match) {
+                const liRegex = /<li>([\s\S]*?)<\/li>/g;
+                let li;
+                while ((li = liRegex.exec(match[1])) !== null) {
+                    items.push(li[1]);
+                }
+            }
+            return items;
+        }
+
+        // =========================================
+        // CLEAR ALL
+        // =========================================
+        function clearAll() {
+            if (!confirm('Clear all fields and start fresh?')) return;
+
+            document.getElementById('id').value = '';
+            document.getElementById('number').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('tagline').value = '';
+            document.getElementById('icon').value = '';
+            document.getElementById('color').value = '#C8E64E';
+
+            document.querySelectorAll('.learn-point').forEach(i => i.value = '');
+            document.querySelectorAll('.who-point').forEach(i => i.value = '');
+
+            document.getElementById('tabs-container').innerHTML = '';
+            init();
+
+            showToast('Cleared — starting fresh');
+        }
+
+        // =========================================
+        // OVERRIDE: Handle loaded content on download
+        // =========================================
+        // When downloading, if a tab has the "existing content" info div
+        // and no new blocks were added, preserve the original HTML.
+        const _originalBuild = buildModuleJSON;
+
+        // We need to store original tab HTML when loading
+        let _loadedModuleTabs = {};
+
+        const _origPopulate = populateForm;
+        populateForm = function (module) {
+            _loadedModuleTabs = module.tabs ? { ...module.tabs } : {};
+            _origPopulate(module);
+        };
+
+        const _origBuild = buildModuleJSON;
+        buildModuleJSON = function () {
+            const result = _origBuild();
+
+            // For tabs that have no new blocks (only the info div), use original HTML
+            const tabItems = document.querySelectorAll('.tab-item');
+            tabItems.forEach(item => {
+                const key = item.querySelector('.tab-key').value.trim();
+                const blocks = item.querySelectorAll('.content-block');
+                if (blocks.length === 0 && _loadedModuleTabs[key]) {
+                    result.tabs[key] = _loadedModuleTabs[key];
+                }
+            });
+
+            return result;
+        };
+
+        window.onload = init;
+    </script>
+
+</body>
+
+</html>
