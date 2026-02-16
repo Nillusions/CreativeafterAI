@@ -2,7 +2,7 @@
 window.MODULES_MANIFEST = [
     {
         "id": "using-and-choosing-ai",
-        "number": "02",
+        "number": "01",
         "title": "How to think about AI and choosing AI tools",
         "tagline": "A practical guide for anyone trying to make sense of it all",
         "icon": "roller-coaster",
@@ -16,5 +16,6 @@ window.MODULES_MANIFEST = [
         "icon": "sparkles",
         "color": "#f4f830"
     }
+
 
 ];
