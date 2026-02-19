@@ -15,7 +15,15 @@ window.MODULES_MANIFEST = [
         "tagline": "Escape the echo chamber and generate ideas you'd never see coming",
         "icon": "sparkles",
         "color": "#f4f830"
+    },
+    {
+        "id": "prompting",
+        "number": "03",
+        "title": "Prompting: How to talk to AI so it gets stuff done!",
+        "tagline": "AI gives back what you give it. Better input = better output.",
+        "icon": "square-pen",
+        "color": "#fda121"
     }
 
-
 ];
+
