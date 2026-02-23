@@ -2,7 +2,7 @@
 window.MODULES_MANIFEST = [
     {
         "id": "using-and-choosing-ai",
-        "number": "01",
+        "number": "02",
         "title": "How to think about AI and choosing AI tools",
         "tagline": "A practical guide for anyone trying to make sense of it all",
         "icon": "roller-coaster",
@@ -23,7 +23,14 @@ window.MODULES_MANIFEST = [
         "tagline": "AI gives back what you give it. Better input = better output.",
         "icon": "square-pen",
         "color": "#fda121"
+    },
+    {
+        "id": "creative research",
+        "number": "04",
+        "title": "AI-Assisted Creative Research",
+        "tagline": "Use AI to uncover patterns, opportunities, and ideas.",
+        "icon": "book-search",
+        "color": "#a09bf3",
     }
 
-];
-
+]
