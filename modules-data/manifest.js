@@ -31,7 +31,14 @@ window.MODULES_MANIFEST = [
         "tagline": "Use AI to uncover patterns, opportunities, and ideas.",
         "icon": "book-search",
         "color": "#a09bf3",
-    }
-
+    },
+    {
+        "id": "node-based-systems",
+        "number": "05",
+        "title": "Node-based Gen AI Systems in Creative Projects",
+        "tagline": "Build intelligent creative pipelines by connecting AI models like building blocks",
+        "icon": "workflow",
+        "color": "#f98c71",
+     }
 ]
 
