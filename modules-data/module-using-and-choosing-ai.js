@@ -1,7 +1,7 @@
 // Module: using-and-choosing-ai
 window.LOADED_MODULE = {
     "id": "using-and-choosing-ai",
-    "number": "01",
+    "number": "02",
     "title": "How to think about AI and choosing AI tools",
     "tagline": "A practical guide for anyone trying to make sense of it all",
     "icon": "roller-coaster",

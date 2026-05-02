@@ -339,118 +339,218 @@ function initPageTransitions() {
 }
 
 // =========================================
-// INTERACTIVE PARTICLE BACKGROUND
+// INTERACTIVE GENERATIVE BACKGROUND
+// Mirrors the identity-system art direction: faint grid +
+// anchor / relay / signal nodes + rectilinear cream connectors.
+// Network sits dim; cursor reveals the cells nearest to it.
 // =========================================
 function initParticles() {
     const canvas = document.getElementById('particle-canvas');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let mouse = { x: -9999, y: -9999 };
-    const REVEAL_RADIUS = 180;
-    const PARTICLE_COUNT_FACTOR = 0.00025;
-    const DOT_SIZE = 2.5;
+    const hero = canvas.parentElement;
+
+    const GRID = 56;
+    const REVEAL_RADIUS = 220;
+    const ANCHOR_SIZE = 20;
+    const RELAY_SIZE = 12;
+    const SIGNAL_SIZE = 7;
+
+    // RGB triplets so we can compose alpha at draw time.
+    const COLORS = {
+        grid: 'rgba(255, 255, 255, 0.03)',
+        conn: '245, 240, 232',   // --accent-cream  #F5F0E8
+        anchor: '200, 230, 78',  // --accent-green  #C8E64E
+        relay: '245, 166, 35',   // --accent-orange #F5A623
+        signal: '242, 162, 232'  // --accent-pink   #F2A2E8
+    };
+
+    let width = 0, height = 0;
+    let cols = 0, rows = 0, offsetX = 0, offsetY = 0;
+    let nodes = [];
+    let connections = [];
+    const mouse = { x: -9999, y: -9999 };
+
+    // Symmetric-split bias from the generator: high probability on the
+    // left/right edges, ~zero across the centre — keeps the headline area clear.
+    function edgeBias(nx) {
+        return Math.pow(1 - Math.sin(nx * Math.PI), 2.5);
+    }
+
+    function buildScene() {
+        cols = Math.max(1, Math.floor(width / GRID));
+        rows = Math.max(1, Math.floor(height / GRID));
+        offsetX = (width - cols * GRID) / 2;
+        offsetY = (height - rows * GRID) / 2;
+
+        nodes = [];
+        connections = [];
+        const occupied = new Set();
+        const target = Math.max(8, Math.floor(cols * rows * 0.05));
+        const anchorCount = 2;
+        const relayCount = Math.floor(target * 0.3);
+        const signalCount = Math.max(0, target - anchorCount - relayCount);
+
+        const roles = [
+            ...Array(anchorCount).fill({ role: 'anchor', size: ANCHOR_SIZE }),
+            ...Array(relayCount).fill({ role: 'relay', size: RELAY_SIZE }),
+            ...Array(signalCount).fill({ role: 'signal', size: SIGNAL_SIZE })
+        ];
+
+        roles.forEach(def => {
+            for (let i = 0; i < 60; i++) {
+                const c = Math.floor(Math.random() * (cols + 1));
+                const r = Math.floor(Math.random() * (rows + 1));
+                const key = `${c},${r}`;
+                if (occupied.has(key)) continue;
+                if (Math.random() > edgeBias(c / cols)) continue;
+                occupied.add(key);
+                if (def.role === 'anchor') {
+                    occupied.add(`${c+1},${r}`); occupied.add(`${c-1},${r}`);
+                    occupied.add(`${c},${r+1}`); occupied.add(`${c},${r-1}`);
+                }
+                nodes.push({
+                    c, r,
+                    x: offsetX + c * GRID,
+                    y: offsetY + r * GRID,
+                    role: def.role,
+                    size: def.size,
+                    connectionCount: 0
+                });
+                break;
+            }
+        });
+
+        nodes.forEach(n => {
+            const maxConns = n.role === 'anchor' ? 3 : n.role === 'relay' ? 2 : 1;
+            let attempts = 0;
+            while (n.connectionCount < maxConns && attempts < 20) {
+                attempts++;
+                const t = nodes[Math.floor(Math.random() * nodes.length)];
+                if (t === n) continue;
+                const tMax = t.role === 'anchor' ? 3 : t.role === 'relay' ? 2 : 1;
+                if (t.connectionCount >= tMax) continue;
+
+                const cellDist = Math.abs(n.c - t.c) + Math.abs(n.r - t.r);
+                if (cellDist > cols * 0.5) continue;
+
+                n.connectionCount++;
+                t.connectionCount++;
+
+                const points = [{ x: n.x, y: n.y }];
+                if (n.x !== t.x && n.y !== t.y) {
+                    if (Math.random() < 0.5) points.push({ x: t.x, y: n.y });
+                    else points.push({ x: n.x, y: t.y });
+                }
+                points.push({ x: t.x, y: t.y });
+
+                const strokeWidth = Math.max(
+                    n.role === 'anchor' ? 2 : n.role === 'relay' ? 1.5 : 1,
+                    t.role === 'anchor' ? 2 : t.role === 'relay' ? 1.5 : 1
+                );
+
+                connections.push({ points, strokeWidth });
+            }
+        });
+    }
 
     function resize() {
-        const hero = canvas.parentElement;
-        width = canvas.width = hero.offsetWidth;
-        height = canvas.height = hero.offsetHeight;
-        createParticles();
+        const dpr = window.devicePixelRatio || 1;
+        width = hero.offsetWidth;
+        height = hero.offsetHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        buildScene();
     }
 
-    function createParticles() {
-        particles = [];
-        const count = Math.floor(width * height * PARTICLE_COUNT_FACTOR);
-        for (let i = 0; i < count; i++) {
-            particles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                baseX: 0,
-                baseY: 0,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
-            });
-            particles[i].baseX = particles[i].x;
-            particles[i].baseY = particles[i].y;
+    function distanceToSegment(px, py, x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+        let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+    }
+
+    function distanceToPolyline(px, py, points) {
+        let min = Infinity;
+        for (let i = 0; i < points.length - 1; i++) {
+            const d = distanceToSegment(px, py, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+            if (d < min) min = d;
         }
+        return min;
     }
 
-    const hero = canvas.parentElement;
     hero.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mouse.x = e.clientX - rect.left;
         mouse.y = e.clientY - rect.top;
     });
-
     hero.addEventListener('mouseleave', () => {
         mouse.x = -9999;
         mouse.y = -9999;
     });
 
-    function animate() {
+    function draw() {
         ctx.clearRect(0, 0, width, height);
 
-        for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
+        // 1. Grid
+        ctx.strokeStyle = COLORS.grid;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= cols; i++) {
+            ctx.moveTo(offsetX + i * GRID, offsetY);
+            ctx.lineTo(offsetX + i * GRID, offsetY + rows * GRID);
+        }
+        for (let j = 0; j <= rows; j++) {
+            ctx.moveTo(offsetX, offsetY + j * GRID);
+            ctx.lineTo(offsetX + cols * GRID, offsetY + j * GRID);
+        }
+        ctx.stroke();
 
-            p.x += p.vx;
-            p.y += p.vy;
-
-            if (p.x < 0 || p.x > width) p.vx *= -1;
-            if (p.y < 0 || p.y > height) p.vy *= -1;
-
-            const dx = p.x - mouse.x;
-            const dy = p.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < REVEAL_RADIUS * 1.2) {
-                const force = (1 - dist / (REVEAL_RADIUS * 1.2)) * 0.4;
-                p.x += dx * force * 0.02;
-                p.y += dy * force * 0.02;
+        // 2. Connectors — base alpha + reveal boost near cursor
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'miter';
+        for (const conn of connections) {
+            const d = distanceToPolyline(mouse.x, mouse.y, conn.points);
+            const baseAlpha = 0.06;
+            const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.55 : 0;
+            const alpha = baseAlpha + reveal;
+            ctx.strokeStyle = `rgba(${COLORS.conn}, ${alpha})`;
+            ctx.lineWidth = conn.strokeWidth;
+            ctx.beginPath();
+            ctx.moveTo(conn.points[0].x, conn.points[0].y);
+            for (let i = 1; i < conn.points.length; i++) {
+                ctx.lineTo(conn.points[i].x, conn.points[i].y);
             }
-
-            let alpha = 0;
-            if (dist < REVEAL_RADIUS) {
-                alpha = (1 - dist / REVEAL_RADIUS) * 0.7;
-            }
-
-            if (alpha > 0.01) {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, DOT_SIZE, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(200, 230, 78, ${alpha})`;
-                ctx.fill();
-
-                for (let j = i + 1; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const d2x = p2.x - mouse.x;
-                    const d2y = p2.y - mouse.y;
-                    const dist2 = Math.sqrt(d2x * d2x + d2y * d2y);
-                    if (dist2 < REVEAL_RADIUS) {
-                        const pdx = p.x - p2.x;
-                        const pdy = p.y - p2.y;
-                        const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
-                        if (pDist < 60) {
-                            const lineAlpha = (1 - pDist / 60) * alpha * 0.3;
-                            ctx.beginPath();
-                            ctx.moveTo(p.x, p.y);
-                            ctx.lineTo(p2.x, p2.y);
-                            ctx.strokeStyle = `rgba(200, 230, 78, ${lineAlpha})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.stroke();
-                        }
-                    }
-                }
-            }
+            ctx.stroke();
         }
 
-        requestAnimationFrame(animate);
+        // 3. Nodes — same base + reveal pattern, role-coloured
+        for (const n of nodes) {
+            const d = Math.hypot(n.x - mouse.x, n.y - mouse.y);
+            const baseAlpha = 0.18;
+            const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.82 : 0;
+            const alpha = Math.min(1, baseAlpha + reveal);
+            ctx.fillStyle = `rgba(${COLORS[n.role]}, ${alpha})`;
+            ctx.fillRect(n.x - n.size / 2, n.y - n.size / 2, n.size, n.size);
+        }
+
+        requestAnimationFrame(draw);
     }
 
     resize();
-    animate();
-    window.addEventListener('resize', resize);
+    draw();
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 150);
+    });
 }
 
 // =========================================

@@ -41,4 +41,3 @@ window.MODULES_MANIFEST = [
         "color": "#f98c71",
      }
 ]
-
