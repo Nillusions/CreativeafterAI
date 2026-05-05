@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Identity System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="header">
+            <h1>Identity System</h1>
+            <p>Rule-driven, modular generative compositions.</p>
+        </div>
+
+        <div class="control-group">
+            <div class="control-row">
+                <label>Density</label>
+                <span class="val-display" id="densityVal">0.4</span>
+            </div>
+            <input type="range" id="density" min="0.05" max="1.0" step="0.05" value="0.4" oninput="updateVal('density')">
+        </div>
+
+        <div class="control-group">
+            <div class="control-row">
+                <label>Grid Size</label>
+                <span class="val-display" id="gridVal">48px</span>
+            </div>
+            <input type="range" id="grid" min="24" max="80" step="8" value="48" oninput="updateVal('grid')">
+        </div>
+
+        <div class="control-group">
+            <label>Canvas Size</label>
+            <select id="canvas-size" onchange="toggleCustomSize()">
+                <option value="fill">Fill Screen</option>
+                <option value="hero">Website Hero (1440x800)</option>
+                <option value="mobile">Mobile (390x844)</option>
+                <option value="social">Social Media (1080x1080)</option>
+                <option value="print">Print A4 (2480x3508)</option>
+                <option value="custom">Custom...</option>
+            </select>
+        </div>
+
+        <div class="control-group" id="custom-size-group" style="display: none;">
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 10px; text-transform: uppercase;">Width</label>
+                    <input type="number" id="custom-width" value="1920" style="width: 100%; padding: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box; margin-top: 4px;" onchange="generate()">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 10px; text-transform: uppercase;">Height</label>
+                    <input type="number" id="custom-height" value="1080" style="width: 100%; padding: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box; margin-top: 4px;" onchange="generate()">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Mode</label>
+            <select id="mode">
+                <option value="hero-right">Hero Right</option>
+                <option value="hero-center">Hero Center</option>
+                <option value="diagonal">Diagonal Flow</option>
+                <option value="symmetric-split">Symmetric Split</option>
+                <option value="cluster">Cluster + Satellite</option>
+                <option value="corner-nodes">Corner Nodes</option>
+                <option value="horizontal">Horizontal Bands</option>
+                <option value="perimeter">Perimeter</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Connection Style</label>
+            <select id="style">
+                <option value="strict">Strict (90°)</option>
+                <option value="rounded">Rounded (12px radius)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label style="margin-bottom: 8px;">System Colors</label>
+            <div id="custom-colors" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="control-row">
+                    <label style="font-size: 10px;">Background</label>
+                    <input type="color" id="custom-bg" value="#0e0e0e" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+                <div class="control-row">
+                    <label style="font-size: 10px;">Grid Lines</label>
+                    <input type="color" id="custom-grid" value="#161616" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+                <div class="control-row">
+                    <label style="font-size: 10px;">Connections</label>
+                    <input type="color" id="custom-conn" value="#F5F0E8" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+                <div class="control-row" style="margin-top: 4px;">
+                    <label style="font-size: 10px;">Anchor Nodes</label>
+                    <input type="color" id="custom-anchor" value="#C8E64E" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+                <div class="control-row">
+                    <label style="font-size: 10px;">Relay Nodes</label>
+                    <input type="color" id="custom-relay" value="#F5A623" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+                <div class="control-row">
+                    <label style="font-size: 10px;">Signal Nodes</label>
+                    <input type="color" id="custom-signal" value="#F2A2E8" style="width: 28px; border: none; padding: 0; height: 28px; cursor: pointer; background: none;">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 8px;">
+            <label class="checkbox-group">
+                <input type="checkbox" id="showGrid" checked>
+                Show Structural Grid
+            </label>
+            <label class="checkbox-group">
+                <input type="checkbox" id="showConnections" checked>
+                Show Connections
+            </label>
+            <label class="checkbox-group">
+                <input type="checkbox" id="motion" checked>
+                Enable Motion
+            </label>
+        </div>
+
+        <div class="actions">
+            <button class="primary" onclick="generate()">Regenerate</button>
+            <button class="secondary" onclick="downloadSVG()">Export SVG</button>
+            <button class="secondary" onclick="downloadPNG()">Export PNG</button>
+            <button class="secondary" id="btn-gif" onclick="downloadGIF()">Export GIF</button>
+        </div>
+    </div>
+
+    <div id="canvasWrap">
+        <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
