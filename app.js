@@ -173,29 +173,80 @@ async function fetchAndRenderTools() {
             }).join('');
         };
 
-        // Render the first 12 tools
-        grid.innerHTML = renderCards(data.tools.slice(0, 12));
-        observeRevealElements();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
-        // If there are more than 12 tools, add a "See More" button
+        // --- Search Logic & Rendering ---
+        let isShowingAll = false;
+        let currentFilteredTools = data.tools;
+        const searchInput = document.getElementById('tools-search-input');
+        
+        let btnContainer = null;
         if (data.tools.length > 12) {
             const section = document.getElementById('tools');
-            const btnContainer = document.createElement('div');
+            btnContainer = document.createElement('div');
             btnContainer.style.textAlign = 'center';
             btnContainer.style.marginTop = '48px';
             btnContainer.innerHTML = `<button id="see-more-tools-btn" class="btn-secondary" style="cursor: pointer; border: none; font-family: inherit;">See all ${data.tools.length} tools</button>`;
-            
             section.appendChild(btnContainer);
 
             document.getElementById('see-more-tools-btn').addEventListener('click', function() {
-                // Render the rest of the tools
-                const restOfToolsHtml = renderCards(data.tools.slice(12));
-                grid.insertAdjacentHTML('beforeend', restOfToolsHtml);
-                observeRevealElements();
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-                // Hide the button
-                btnContainer.style.display = 'none';
+                isShowingAll = true;
+                updateRender();
+            });
+        }
+
+        const updateRender = () => {
+            if (currentFilteredTools.length === 0) {
+                grid.innerHTML = '<div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">No matching tools found.</div>';
+                if (btnContainer) btnContainer.style.display = 'none';
+                return;
+            }
+
+            const limit = (isShowingAll || searchInput.value.trim() !== '') ? currentFilteredTools.length : Math.min(12, currentFilteredTools.length);
+            grid.innerHTML = renderCards(currentFilteredTools.slice(0, limit));
+            
+            observeRevealElements();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            if (btnContainer) {
+                if (searchInput.value.trim() !== '' || isShowingAll || currentFilteredTools.length <= 12) {
+                    btnContainer.style.display = 'none';
+                } else {
+                    btnContainer.style.display = 'block';
+                    btnContainer.querySelector('button').textContent = `See all ${currentFilteredTools.length} tools`;
+                }
+            }
+        };
+
+        // Initial render
+        updateRender();
+
+        // Search event listener
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                
+                if (term === '') {
+                    currentFilteredTools = data.tools;
+                } else {
+                    currentFilteredTools = data.tools.filter(tool => {
+                        const props = tool.properties || {};
+                        const nameKey = Object.keys(props).find(k => props[k]?.type === 'title') || 'Name';
+                        const name = (props[nameKey] || props.title || '').toString().toLowerCase();
+                        const desc = getDescription(props, nameKey).toLowerCase();
+                        
+                        let tags = '';
+                        if (props.Category) {
+                            tags += Array.isArray(props.Category) ? props.Category.join(' ').toLowerCase() : props.Category.toString().toLowerCase();
+                        }
+                        if (props.Tags && Array.isArray(props.Tags)) {
+                            tags += ' ' + props.Tags.join(' ').toLowerCase();
+                        }
+
+                        // Simple but robust keyword search
+                        return name.includes(term) || desc.includes(term) || tags.includes(term);
+                    });
+                }
+                
+                updateRender();
             });
         }
     } catch (error) {

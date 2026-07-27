@@ -120,6 +120,14 @@
             </div>
             <p class="section-subtitle">A curated collection of the best AI tools from our Notion database</p>
         </div>
+        
+        <div class="tools-search-container reveal">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="tools-search-input" placeholder="Search tools by name, type, or description..." class="tools-search-input">
+            </div>
+        </div>
+
         <div class="tools-grid" id="tools-grid">
             <!-- Tool cards injected by app.js from Cloudflare Worker -->
             <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading tools...</div>

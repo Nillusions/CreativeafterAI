@@ -36,7 +36,7 @@ export default {
     }
 
     try {
-      // Query the Notion database
+      // Query the Notion database and filter for AI/ML tools
       const notionResponse = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
         method: 'POST',
         headers: {
@@ -45,7 +45,13 @@ export default {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          page_size: 100 // Adjust if you need pagination (100 is max per request)
+          page_size: 100, // Adjust if you need pagination (100 is max per request)
+          filter: {
+            property: 'AI/ML',
+            checkbox: {
+              equals: true
+            }
+          }
         })
       });
 
@@ -72,6 +78,7 @@ export default {
             case 'url': return prop.url || '';
             case 'select': return prop.select?.name || '';
             case 'multi_select': return prop.multi_select.map(s => s.name) || [];
+            case 'checkbox': return prop.checkbox;
             default: return null; // We can expand this if needed
           }
         };
