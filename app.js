@@ -83,6 +83,135 @@ function renderModuleCards(modules) {
 }
 
 // =========================================
+// HOMEPAGE: RENDER TOOLS FROM CLOUDFLARE
+// =========================================
+async function fetchAndRenderTools() {
+    const grid = document.getElementById('tools-grid');
+    if (!grid) return;
+
+    // REPLACE THIS URL WITH YOUR ACTUAL CLOUDFLARE WORKER URL
+    const WORKER_URL = 'https://notion-tools-proxy.alenthomas2898.workers.dev/';
+
+    try {
+        const response = await fetch(WORKER_URL);
+        if (!response.ok) throw new Error('Failed to fetch tools');
+
+        const data = await response.json();
+
+        if (!data.tools || data.tools.length === 0) {
+            grid.innerHTML = '<div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">No tools found.</div>';
+            return;
+        }
+
+        // Better description extraction: try common names, then fallback to the longest string
+        const getDescription = (props, nameKey) => {
+            if (props.Note) return props.Note;
+            if (props.Description) return props.Description;
+            if (props.Summary) return props.Summary;
+            if (props.About) return props.About;
+            
+            // Fallback: find the longest string property that isn't the name/url
+            let longestStr = '';
+            for (const [key, val] of Object.entries(props)) {
+                if (typeof val === 'string' && key !== nameKey && key !== 'URL' && key !== 'Link' && val.length > longestStr.length) {
+                    longestStr = val;
+                }
+            }
+            return longestStr.length > 0 ? longestStr : 'No description available.';
+        };
+
+        // Render helper function
+        const renderCards = (toolsList) => {
+            return toolsList.map(tool => {
+                const props = tool.properties || {};
+                
+                // Find the name key
+                let nameKey = 'Name';
+                if (!props[nameKey]) {
+                    // Fallback to finding the 'title' type property which is usually the page name
+                    nameKey = Object.keys(props).find(k => tool.properties[k]?.type === 'title') || 'title';
+                }
+                const name = props[nameKey] || props.title || 'Unknown Tool';
+                
+                const description = getDescription(props, nameKey);
+                
+                // Try to find a property that looks like a URL (Link, URL, Website, etc.)
+                const url = props.Link || props.URL || props.Website || tool.url || '#';
+                
+                // Extract tags if available
+                let tagsHtml = '';
+                if (props.Category) {
+                    // Category might be a string (select) or array (multi_select)
+                    if (Array.isArray(props.Category)) {
+                        tagsHtml = `<div class="tool-tags">
+                            ${props.Category.slice(0, 3).map(tag => `<span class="tool-tag">${tag}</span>`).join('')}
+                        </div>`;
+                    } else if (typeof props.Category === 'string' && props.Category.trim() !== '') {
+                        tagsHtml = `<div class="tool-tags"><span class="tool-tag">${props.Category}</span></div>`;
+                    }
+                } else if (props.Tags && Array.isArray(props.Tags)) {
+                    tagsHtml = `<div class="tool-tags">
+                        ${props.Tags.slice(0, 3).map(tag => `<span class="tool-tag">${tag}</span>`).join('')}
+                    </div>`;
+                }
+
+                return `
+                <a href="${url}" target="_blank" rel="noopener noreferrer" class="tool-card reveal">
+                    <div class="tool-card-header">
+                        <div class="tool-icon">
+                            ${tool.icon ? (tool.icon.startsWith('http') ? `<img src="${tool.icon}" alt="icon">` : tool.icon) : '<i data-lucide="wrench"></i>'}
+                        </div>
+                        <h3 class="tool-title">${name}</h3>
+                    </div>
+                    <p class="tool-description">${description}</p>
+                    ${tagsHtml}
+                    <div class="tool-action">
+                        <span>Visit Tool</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </div>
+                </a>`;
+            }).join('');
+        };
+
+        // Render the first 12 tools
+        grid.innerHTML = renderCards(data.tools.slice(0, 12));
+        observeRevealElements();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // If there are more than 12 tools, add a "See More" button
+        if (data.tools.length > 12) {
+            const section = document.getElementById('tools');
+            const btnContainer = document.createElement('div');
+            btnContainer.style.textAlign = 'center';
+            btnContainer.style.marginTop = '48px';
+            btnContainer.innerHTML = `<button id="see-more-tools-btn" class="btn-secondary" style="cursor: pointer; border: none; font-family: inherit;">See all ${data.tools.length} tools</button>`;
+            
+            section.appendChild(btnContainer);
+
+            document.getElementById('see-more-tools-btn').addEventListener('click', function() {
+                // Render the rest of the tools
+                const restOfToolsHtml = renderCards(data.tools.slice(12));
+                grid.insertAdjacentHTML('beforeend', restOfToolsHtml);
+                observeRevealElements();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                // Hide the button
+                btnContainer.style.display = 'none';
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching tools:', error);
+        grid.innerHTML = '<div class="loader-text" style="width: 100%; text-align: center; color: #ff6b6b;">Error loading tools. Please check your Cloudflare Worker URL.</div>';
+    }
+}
+
+// Initialize tools fetch on DOM load if we are on the homepage
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('tools-grid')) {
+        fetchAndRenderTools();
+    }
+});
+
+// =========================================
 // MODULE PAGE: RENDER
 // =========================================
 
@@ -407,8 +536,8 @@ function initParticles() {
                 if (Math.random() > edgeBias(c / cols)) continue;
                 occupied.add(key);
                 if (def.role === 'anchor') {
-                    occupied.add(`${c+1},${r}`); occupied.add(`${c-1},${r}`);
-                    occupied.add(`${c},${r+1}`); occupied.add(`${c},${r-1}`);
+                    occupied.add(`${c + 1},${r}`); occupied.add(`${c - 1},${r}`);
+                    occupied.add(`${c},${r + 1}`); occupied.add(`${c},${r - 1}`);
                 }
                 nodes.push({
                     c, r,
@@ -479,7 +608,7 @@ function initParticles() {
     function distanceToPolyline(px, py, points) {
         let min = Infinity;
         for (let i = 0; i < points.length - 1; i++) {
-            const d = distanceToSegment(px, py, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+            const d = distanceToSegment(px, py, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
             if (d < min) min = d;
         }
         return min;

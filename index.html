@@ -30,6 +30,7 @@
             <div class="nav-links">
                 <a href="#about">About</a>
                 <a href="#modules">Modules</a>
+                <a href="#tools">Tools</a>
             </div>
 
         </div>
@@ -110,6 +111,21 @@
         </div>
     </section>
 
+    <!-- Tools Section -->
+    <section class="modules-section tools-section" id="tools">
+        <div class="section-header reveal">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                <h2 class="section-title" style="margin-bottom: 0;">AI Tools Directory</h2>
+                <span class="new-badge">New</span>
+            </div>
+            <p class="section-subtitle">A curated collection of the best AI tools from our Notion database</p>
+        </div>
+        <div class="tools-grid" id="tools-grid">
+            <!-- Tool cards injected by app.js from Cloudflare Worker -->
+            <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading tools...</div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
@@ -127,6 +143,7 @@
 
     <script src="modules-data/manifest.js"></script>
     <script src="app.js"></script>
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 
 </html>
