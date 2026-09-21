@@ -524,26 +524,32 @@ function initPageTransitions() {
 // anchor / relay / signal nodes + rectilinear cream connectors.
 // Network sits dim; cursor reveals the cells nearest to it.
 // =========================================
-function initParticles() {
-    const canvas = document.getElementById('particle-canvas');
-    if (!canvas) return;
+// =========================================
+// INTERACTIVE GENERATIVE BACKGROUND (IDENTITY SYSTEM)
+// Mirrors the identity-system art direction: faint grid +
+// anchor / relay / signal nodes + rectilinear cream connectors.
+// Network sits dim; cursor reveals the cells nearest to it.
+// =========================================
+function initGenerativeCanvas(canvasTarget, options = {}) {
+    const canvas = typeof canvasTarget === 'string' ? document.getElementById(canvasTarget) : canvasTarget;
+    if (!canvas) return null;
 
     const ctx = canvas.getContext('2d');
-    const hero = canvas.parentElement;
+    const container = canvas.parentElement;
+    if (!container) return null;
 
-    const GRID = 56;
-    const REVEAL_RADIUS = 220;
-    const ANCHOR_SIZE = 20;
-    const RELAY_SIZE = 12;
-    const SIGNAL_SIZE = 7;
+    const GRID = options.grid || 56;
+    const REVEAL_RADIUS = options.revealRadius || 220;
+    const ANCHOR_SIZE = options.anchorSize || 20;
+    const RELAY_SIZE = options.relaySize || 12;
+    const SIGNAL_SIZE = options.signalSize || 7;
 
-    // RGB triplets so we can compose alpha at draw time.
-    const COLORS = {
-        grid: 'rgba(255, 255, 255, 0.03)',
-        conn: '245, 240, 232',   // --accent-cream  #F5F0E8
-        anchor: '200, 230, 78',  // --accent-green  #C8E64E
-        relay: '245, 166, 35',   // --accent-orange #F5A623
-        signal: '242, 162, 232'  // --accent-pink   #F2A2E8
+    const COLORS = options.colors || {
+        grid: options.gridColor || 'rgba(255, 255, 255, 0.03)',
+        conn: options.connColor || '245, 240, 232',   // --accent-cream  #F5F0E8
+        anchor: options.anchorColor || '200, 230, 78',  // --accent-green  #C8E64E
+        relay: options.relayColor || '245, 166, 35',   // --accent-orange #F5A623
+        signal: options.signalColor || '242, 162, 232'  // --accent-pink   #F2A2E8
     };
 
     let width = 0, height = 0;
@@ -552,9 +558,12 @@ function initParticles() {
     let connections = [];
     const mouse = { x: -9999, y: -9999 };
 
-    // Symmetric-split bias from the generator: high probability on the
-    // left/right edges, ~zero across the centre — keeps the headline area clear.
     function edgeBias(nx) {
+        if (options.bias === 'uniform') return 0.5;
+        if (options.bias === 'center') {
+            const dist = Math.abs(nx - 0.5);
+            return Math.max(0, 1 - dist * 2);
+        }
         return Math.pow(1 - Math.sin(nx * Math.PI), 2.5);
     }
 
@@ -567,8 +576,9 @@ function initParticles() {
         nodes = [];
         connections = [];
         const occupied = new Set();
-        const target = Math.max(8, Math.floor(cols * rows * 0.05));
-        const anchorCount = 2;
+        const density = options.density || 0.05;
+        const target = Math.max(options.minNodes || 8, Math.floor(cols * rows * density));
+        const anchorCount = options.anchorCount !== undefined ? options.anchorCount : 2;
         const relayCount = Math.floor(target * 0.3);
         const signalCount = Math.max(0, target - anchorCount - relayCount);
 
@@ -613,7 +623,7 @@ function initParticles() {
                 if (t.connectionCount >= tMax) continue;
 
                 const cellDist = Math.abs(n.c - t.c) + Math.abs(n.r - t.r);
-                if (cellDist > cols * 0.5) continue;
+                if (cellDist > cols * 0.6) continue;
 
                 n.connectionCount++;
                 t.connectionCount++;
@@ -637,8 +647,9 @@ function initParticles() {
 
     function resize() {
         const dpr = window.devicePixelRatio || 1;
-        width = hero.offsetWidth;
-        height = hero.offsetHeight;
+        width = container.offsetWidth;
+        height = container.offsetHeight;
+        if (width === 0 || height === 0) return;
         canvas.width = width * dpr;
         canvas.height = height * dpr;
         canvas.style.width = width + 'px';
@@ -665,61 +676,70 @@ function initParticles() {
         return min;
     }
 
-    hero.addEventListener('mousemove', (e) => {
+    container.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mouse.x = e.clientX - rect.left;
         mouse.y = e.clientY - rect.top;
     });
-    hero.addEventListener('mouseleave', () => {
+    container.addEventListener('mouseleave', () => {
         mouse.x = -9999;
         mouse.y = -9999;
     });
 
+    let isVisible = true;
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            isVisible = entries[0].isIntersecting;
+        }, { threshold: 0.05 });
+        observer.observe(container);
+    }
+
     function draw() {
-        ctx.clearRect(0, 0, width, height);
+        if (isVisible && width > 0 && height > 0) {
+            ctx.clearRect(0, 0, width, height);
 
-        // 1. Grid
-        ctx.strokeStyle = COLORS.grid;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 0; i <= cols; i++) {
-            ctx.moveTo(offsetX + i * GRID, offsetY);
-            ctx.lineTo(offsetX + i * GRID, offsetY + rows * GRID);
-        }
-        for (let j = 0; j <= rows; j++) {
-            ctx.moveTo(offsetX, offsetY + j * GRID);
-            ctx.lineTo(offsetX + cols * GRID, offsetY + j * GRID);
-        }
-        ctx.stroke();
-
-        // 2. Connectors — base alpha + reveal boost near cursor
-        ctx.lineCap = 'square';
-        ctx.lineJoin = 'miter';
-        for (const conn of connections) {
-            const d = distanceToPolyline(mouse.x, mouse.y, conn.points);
-            const baseAlpha = 0.06;
-            const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.55 : 0;
-            const alpha = baseAlpha + reveal;
-            ctx.strokeStyle = `rgba(${COLORS.conn}, ${alpha})`;
-            ctx.lineWidth = conn.strokeWidth;
+            // 1. Grid
+            ctx.strokeStyle = COLORS.grid;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(conn.points[0].x, conn.points[0].y);
-            for (let i = 1; i < conn.points.length; i++) {
-                ctx.lineTo(conn.points[i].x, conn.points[i].y);
+            for (let i = 0; i <= cols; i++) {
+                ctx.moveTo(offsetX + i * GRID, offsetY);
+                ctx.lineTo(offsetX + i * GRID, offsetY + rows * GRID);
+            }
+            for (let j = 0; j <= rows; j++) {
+                ctx.moveTo(offsetX, offsetY + j * GRID);
+                ctx.lineTo(offsetX + cols * GRID, offsetY + j * GRID);
             }
             ctx.stroke();
-        }
 
-        // 3. Nodes — same base + reveal pattern, role-coloured
-        for (const n of nodes) {
-            const d = Math.hypot(n.x - mouse.x, n.y - mouse.y);
-            const baseAlpha = 0.18;
-            const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.82 : 0;
-            const alpha = Math.min(1, baseAlpha + reveal);
-            ctx.fillStyle = `rgba(${COLORS[n.role]}, ${alpha})`;
-            ctx.fillRect(n.x - n.size / 2, n.y - n.size / 2, n.size, n.size);
-        }
+            // 2. Connectors
+            ctx.lineCap = 'square';
+            ctx.lineJoin = 'miter';
+            for (const conn of connections) {
+                const d = distanceToPolyline(mouse.x, mouse.y, conn.points);
+                const baseAlpha = options.baseAlphaConn || 0.06;
+                const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.55 : 0;
+                const alpha = baseAlpha + reveal;
+                ctx.strokeStyle = `rgba(${COLORS.conn}, ${alpha})`;
+                ctx.lineWidth = conn.strokeWidth;
+                ctx.beginPath();
+                ctx.moveTo(conn.points[0].x, conn.points[0].y);
+                for (let i = 1; i < conn.points.length; i++) {
+                    ctx.lineTo(conn.points[i].x, conn.points[i].y);
+                }
+                ctx.stroke();
+            }
 
+            // 3. Nodes
+            for (const n of nodes) {
+                const d = Math.hypot(n.x - mouse.x, n.y - mouse.y);
+                const baseAlpha = options.baseAlphaNode || 0.18;
+                const reveal = d < REVEAL_RADIUS ? (1 - d / REVEAL_RADIUS) * 0.82 : 0;
+                const alpha = Math.min(1, baseAlpha + reveal);
+                ctx.fillStyle = `rgba(${COLORS[n.role]}, ${alpha})`;
+                ctx.fillRect(n.x - n.size / 2, n.y - n.size / 2, n.size, n.size);
+            }
+        }
         requestAnimationFrame(draw);
     }
 
@@ -731,6 +751,14 @@ function initParticles() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(resize, 150);
     });
+
+    return { resize, buildScene };
+}
+
+window.initGenerativeCanvas = initGenerativeCanvas;
+
+function initParticles() {
+    initGenerativeCanvas('particle-canvas');
 }
 
 // =========================================
