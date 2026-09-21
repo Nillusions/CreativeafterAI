@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fieldnotes — Creative after AI</title>
+    <meta name="description"
+        content="Essays, tactical breakdowns, and practical reflections on mastering AI for creative professionals.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+    <!-- Loader -->
+    <div class="loader">
+        <div class="loader-text">Creative <span>after AI</span></div>
+    </div>
+
+    <!-- Page Transition -->
+    <div class="page-transition"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">Creative <span>after AI</span></a>
+        <div class="nav-right">
+            <div class="nav-links">
+                <a href="index.html#about">About</a>
+                <a href="index.html#modules">Modules</a>
+                <a href="index.html#tools">Tools</a>
+                <a href="fieldnotes.html" class="nav-link-with-badge" style="color: #fff;">
+                    Fieldnotes <span class="nav-new-badge">New</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Fieldnotes Hero -->
+    <header class="fieldnotes-hero">
+        <div class="hero-badge reveal">
+            <span class="dot"></span>
+            Dispatches & Deep Dives
+        </div>
+        <h1 class="fieldnotes-hero-title reveal">
+            Field<span>notes</span>
+        </h1>
+        <p class="fieldnotes-hero-subtitle reveal">
+            Practical essays, visual breakdowns, and tactical reflections on using AI as a creative collaborator without sacrificing taste.
+        </p>
+    </header>
+
+    <!-- Search & Filter Controls -->
+    <div class="fieldnotes-filter-container reveal">
+        <div class="category-pills" id="fieldnotes-categories">
+            <!-- Populated dynamically by fieldnotes.js -->
+        </div>
+        <div class="fieldnotes-search-wrapper">
+            <input type="text" id="fieldnotes-search-input" placeholder="Search fieldnotes by keyword, tag..." class="tools-search-input">
+        </div>
+    </div>
+
+    <!-- Archive Grid -->
+    <main class="fieldnotes-section" style="padding-top: 0;">
+        <div class="fieldnotes-grid" id="fieldnotes-archive-grid">
+            <!-- Injected by fieldnotes.js -->
+            <div class="loader-text" style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">
+                Loading fieldnotes...
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">Creative <span>after AI</span></div>
+            <p class="footer-text">
+                A Wknd.prj project by
+                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank"
+                    style="color: #C8E64E; text-decoration: underline; text-underline-offset: 3px;">
+                    <strong>Alen</strong>
+                </a>.
+                Made with ✦ and AI.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="fieldnotes-data/manifest.js"></script>
+    <script src="fieldnotes.js"></script>
+    <script src="app.js"></script>
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script>
+</body>
+
+</html>

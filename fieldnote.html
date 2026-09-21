@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fieldnote — Creative after AI</title>
+    <meta name="description" content="Deep dive article on creative workflows, prompting, and human discernment with AI.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+    <!-- Reading Progress Bar -->
+    <div id="reading-progress-bar"></div>
+
+    <!-- Loader -->
+    <div class="loader">
+        <div class="loader-text">Creative <span>after AI</span></div>
+    </div>
+
+    <!-- Page Transition -->
+    <div class="page-transition"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">Creative <span>after AI</span></a>
+        <div class="nav-right">
+            <div class="nav-links">
+                <a href="index.html#about">About</a>
+                <a href="index.html#modules">Modules</a>
+                <a href="index.html#tools">Tools</a>
+                <a href="fieldnotes.html" class="nav-link-with-badge" style="color: #fff;">
+                    Fieldnotes <span class="nav-new-badge">New</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Article Reader View -->
+    <article class="reader-wrapper" id="fieldnote-article-container">
+        <!-- Injected by fieldnotes.js -->
+        <header id="article-header"></header>
+        <div id="article-cover"></div>
+        <div class="article-content" id="article-body"></div>
+        <nav class="article-footer-nav" id="article-footer-nav"></nav>
+    </article>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">Creative <span>after AI</span></div>
+            <p class="footer-text">
+                A Wknd.prj project by
+                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank"
+                    style="color: #C8E64E; text-decoration: underline; text-underline-offset: 3px;">
+                    <strong>Alen</strong>
+                </a>.
+                Made with ✦ and AI.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="fieldnotes-data/manifest.js"></script>
+    <script src="fieldnotes.js"></script>
+    <script src="app.js"></script>
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script>
+</body>
+
+</html>
