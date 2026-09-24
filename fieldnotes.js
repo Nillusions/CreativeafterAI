@@ -394,8 +394,70 @@ async function initArticleReader() {
         return;
     }
 
-    // Set page title
+    // Set page title & dynamic SEO metadata
     document.title = `${article.title} — Fieldnotes | Creative after AI`;
+
+    const articleUrl = `https://nillusions.github.io/CreativeafterAI/fieldnote.html?id=${encodeURIComponent(article.slug || article.id)}`;
+    const articleDesc = article.excerpt || article.subtitle || 'Practical essay on AI for creative professionals.';
+    const articleImg = article.coverImage ? (article.coverImage.startsWith('http') ? article.coverImage : `https://nillusions.github.io/CreativeafterAI/${article.coverImage}`) : 'https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png';
+
+    const descMeta = document.querySelector('meta[name="description"]');
+    if (descMeta) descMeta.setAttribute('content', articleDesc);
+
+    const canonicalEl = document.getElementById('canonical-url');
+    if (canonicalEl) canonicalEl.setAttribute('href', articleUrl);
+
+    // Update Open Graph tags
+    const ogTitle = document.getElementById('og-title');
+    if (ogTitle) ogTitle.setAttribute('content', `${article.title} — Fieldnotes | Creative after AI`);
+    const ogDesc = document.getElementById('og-desc');
+    if (ogDesc) ogDesc.setAttribute('content', articleDesc);
+    const ogUrl = document.getElementById('og-url');
+    if (ogUrl) ogUrl.setAttribute('content', articleUrl);
+    const ogImg = document.getElementById('og-image');
+    if (ogImg) ogImg.setAttribute('content', articleImg);
+
+    // Update Twitter tags
+    const twTitle = document.getElementById('tw-title');
+    if (twTitle) twTitle.setAttribute('content', `${article.title} — Fieldnotes | Creative after AI`);
+    const twDesc = document.getElementById('tw-desc');
+    if (twDesc) twDesc.setAttribute('content', articleDesc);
+    const twUrl = document.getElementById('tw-url');
+    if (twUrl) twUrl.setAttribute('content', articleUrl);
+    const twImg = document.getElementById('tw-image');
+    if (twImg) twImg.setAttribute('content', articleImg);
+
+    // Update Schema.org JSON-LD
+    const jsonLdEl = document.getElementById('article-jsonld');
+    if (jsonLdEl) {
+        jsonLdEl.textContent = JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": article.title,
+            "description": articleDesc,
+            "url": articleUrl,
+            "image": articleImg,
+            "datePublished": article.date || "2024-09-18",
+            "author": {
+                "@type": "Person",
+                "name": article.author?.name || "Alen Thomas",
+                "jobTitle": article.author?.role || "Founder, Creative after AI"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Creative after AI",
+                "url": "https://nillusions.github.io/CreativeafterAI/",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png"
+                }
+            },
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": articleUrl
+            }
+        });
+    }
 
     // Render Article Header
     const headerEl = document.getElementById('article-header');

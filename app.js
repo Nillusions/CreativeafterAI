@@ -848,6 +848,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (module) {
             renderModulePage(module, manifest);
             document.title = `${module.title} — Creative after AI`;
+
+            const moduleUrl = `https://nillusions.github.io/CreativeafterAI/module.html?id=${encodeURIComponent(module.id)}`;
+            const moduleDesc = module.tagline || 'Deep dive into this Creative after AI module — techniques, tools, and examples.';
+            const moduleImg = 'https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png';
+
+            const descMeta = document.querySelector('meta[name="description"]');
+            if (descMeta) descMeta.setAttribute('content', moduleDesc);
+
+            const canonicalEl = document.getElementById('canonical-url');
+            if (canonicalEl) canonicalEl.setAttribute('href', moduleUrl);
+
+            // Update Open Graph tags
+            const ogTitle = document.getElementById('og-title');
+            if (ogTitle) ogTitle.setAttribute('content', `${module.title} — Creative after AI`);
+            const ogDesc = document.getElementById('og-desc');
+            if (ogDesc) ogDesc.setAttribute('content', moduleDesc);
+            const ogUrl = document.getElementById('og-url');
+            if (ogUrl) ogUrl.setAttribute('content', moduleUrl);
+            const ogImg = document.getElementById('og-image');
+            if (ogImg) ogImg.setAttribute('content', moduleImg);
+
+            // Update Twitter tags
+            const twTitle = document.getElementById('tw-title');
+            if (twTitle) twTitle.setAttribute('content', `${module.title} — Creative after AI`);
+            const twDesc = document.getElementById('tw-desc');
+            if (twDesc) twDesc.setAttribute('content', moduleDesc);
+            const twUrl = document.getElementById('tw-url');
+            if (twUrl) twUrl.setAttribute('content', moduleUrl);
+            const twImg = document.getElementById('tw-image');
+            if (twImg) twImg.setAttribute('content', moduleImg);
+
+            // Update Schema.org JSON-LD
+            const jsonLdEl = document.getElementById('module-jsonld');
+            if (jsonLdEl) {
+                jsonLdEl.textContent = JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Course",
+                    "name": module.title,
+                    "description": moduleDesc,
+                    "url": moduleUrl,
+                    "provider": {
+                        "@type": "Organization",
+                        "name": "Creative after AI",
+                        "url": "https://nillusions.github.io/CreativeafterAI/"
+                    }
+                });
+            }
         } else {
             window.location.href = 'index.html';
         }
