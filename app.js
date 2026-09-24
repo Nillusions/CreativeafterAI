@@ -17,16 +17,58 @@ function getManifest() {
     return window.MODULES_MANIFEST || [];
 }
 
+async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return;
+        } catch (_) {
+            // Fall back for denied clipboard permissions.
+        }
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    if (!copied) throw new Error('Copy failed');
+}
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
+function safeExternalUrl(value) {
+    if (!value) return null;
+    try {
+        const url = new URL(String(value), window.location.href);
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+
 function loadModule(moduleId) {
     return new Promise((resolve) => {
         // Check if already loaded
+        const moduleExists = getManifest().some(module => module.id === moduleId && !module.comingSoon);
+        if (!moduleExists) {
+            resolve(null);
+            return;
+        }
+
         if (window.LOADED_MODULE && window.LOADED_MODULE.id === moduleId) {
             resolve(window.LOADED_MODULE);
             return;
         }
 
         const script = document.createElement('script');
-        script.src = `modules-data/module-${moduleId}.js`;
+        script.src = `modules-data/module-${encodeURIComponent(moduleId)}.js`;
         script.onload = () => resolve(window.LOADED_MODULE || null);
         script.onerror = () => {
             console.error(`Failed to load module: ${moduleId}`);
@@ -136,7 +178,7 @@ async function fetchAndRenderTools() {
                 const description = getDescription(props, nameKey);
                 
                 // Try to find a property that looks like a URL (Link, URL, Website, etc.)
-                const url = props.Link || props.URL || props.Website || tool.url || '#';
+                const url = safeExternalUrl(props.Link || props.URL || props.Website || tool.url);
                 
                 // Extract tags if available
                 let tagsHtml = '';
@@ -144,29 +186,29 @@ async function fetchAndRenderTools() {
                     // Category might be a string (select) or array (multi_select)
                     if (Array.isArray(props.Category)) {
                         tagsHtml = `<div class="tool-tags">
-                            ${props.Category.slice(0, 3).map(tag => `<span class="tool-tag">${tag}</span>`).join('')}
+                            ${props.Category.slice(0, 3).map(tag => `<span class="tool-tag">${escapeHtml(tag)}</span>`).join('')}
                         </div>`;
                     } else if (typeof props.Category === 'string' && props.Category.trim() !== '') {
-                        tagsHtml = `<div class="tool-tags"><span class="tool-tag">${props.Category}</span></div>`;
+                        tagsHtml = `<div class="tool-tags"><span class="tool-tag">${escapeHtml(props.Category)}</span></div>`;
                     }
                 } else if (props.Tags && Array.isArray(props.Tags)) {
                     tagsHtml = `<div class="tool-tags">
-                        ${props.Tags.slice(0, 3).map(tag => `<span class="tool-tag">${tag}</span>`).join('')}
+                        ${props.Tags.slice(0, 3).map(tag => `<span class="tool-tag">${escapeHtml(tag)}</span>`).join('')}
                     </div>`;
                 }
 
                 return `
-                <a href="${url}" target="_blank" rel="noopener noreferrer" class="tool-card reveal">
+                <a href="${url || '#'}" ${url ? 'target="_blank" rel="noopener noreferrer"' : 'aria-disabled="true"'} class="tool-card reveal">
                     <div class="tool-card-header">
                         <div class="tool-icon">
-                            ${tool.icon ? (tool.icon.startsWith('http') ? `<img src="${tool.icon}" alt="icon">` : tool.icon) : '<i data-lucide="wrench"></i>'}
+                            ${tool.icon ? (safeExternalUrl(tool.icon) ? `<img src="${escapeHtml(safeExternalUrl(tool.icon))}" alt="" loading="lazy">` : escapeHtml(tool.icon)) : '<i data-lucide="wrench"></i>'}
                         </div>
-                        <h3 class="tool-title">${name}</h3>
+                        <h3 class="tool-title">${escapeHtml(name)}</h3>
                     </div>
-                    <p class="tool-description">${description}</p>
+                    <p class="tool-description">${escapeHtml(description)}</p>
                     ${tagsHtml}
                     <div class="tool-action">
-                        <span>Visit Tool</span>
+                        <span>${url ? 'Visit Tool' : 'Link unavailable'}</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </div>
                 </a>`;
@@ -398,7 +440,7 @@ function toggleCard(card) {
 // =========================================
 function copyPrompt(btn) {
     const text = btn.closest('.prompt-card').querySelector('.prompt-text').innerText;
-    navigator.clipboard.writeText(text).then(() => {
+    copyText(text).then(() => {
         btn.textContent = 'Copied ✓';
         btn.classList.add('copied');
         setTimeout(() => {
@@ -412,6 +454,12 @@ function copyPrompt(btn) {
 // SCROLL REVEAL
 // =========================================
 function observeRevealElements() {
+    const elements = document.querySelectorAll('.reveal:not(.visible)');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        elements.forEach(element => element.classList.add('visible'));
+        return;
+    }
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -424,7 +472,7 @@ function observeRevealElements() {
         rootMargin: '0px 0px -50px 0px'
     });
 
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    elements.forEach(element => observer.observe(element));
 }
 
 // =========================================
@@ -503,6 +551,9 @@ function initPageTransitions() {
         const href = link.getAttribute('href');
         if (href && (href.endsWith('.html') || href.includes('module.html'))) {
             link.addEventListener('click', (e) => {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || link.target === '_blank') {
+                    return;
+                }
                 e.preventDefault();
                 const transition = document.querySelector('.page-transition');
                 if (transition) {
@@ -519,12 +570,6 @@ function initPageTransitions() {
 }
 
 // =========================================
-// INTERACTIVE GENERATIVE BACKGROUND
-// Mirrors the identity-system art direction: faint grid +
-// anchor / relay / signal nodes + rectilinear cream connectors.
-// Network sits dim; cursor reveals the cells nearest to it.
-// =========================================
-// =========================================
 // INTERACTIVE GENERATIVE BACKGROUND (IDENTITY SYSTEM)
 // Mirrors the identity-system art direction: faint grid +
 // anchor / relay / signal nodes + rectilinear cream connectors.
@@ -533,6 +578,8 @@ function initPageTransitions() {
 function initGenerativeCanvas(canvasTarget, options = {}) {
     const canvas = typeof canvasTarget === 'string' ? document.getElementById(canvasTarget) : canvasTarget;
     if (!canvas) return null;
+    if (canvas.__generativeCanvasController) return canvas.__generativeCanvasController;
+
 
     const ctx = canvas.getContext('2d');
     const container = canvas.parentElement;
@@ -687,14 +734,20 @@ function initGenerativeCanvas(canvasTarget, options = {}) {
     });
 
     let isVisible = true;
+    let visibilityObserver = null;
     if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries) => {
+        visibilityObserver = new IntersectionObserver((entries) => {
             isVisible = entries[0].isIntersecting;
         }, { threshold: 0.05 });
-        observer.observe(container);
+        visibilityObserver.observe(container);
     }
 
     function draw() {
+        if (!canvas.isConnected) {
+            controller.destroy();
+            return;
+        }
+
         if (isVisible && width > 0 && height > 0) {
             ctx.clearRect(0, 0, width, height);
 
@@ -740,19 +793,32 @@ function initGenerativeCanvas(canvasTarget, options = {}) {
                 ctx.fillRect(n.x - n.size / 2, n.y - n.size / 2, n.size, n.size);
             }
         }
-        requestAnimationFrame(draw);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(draw);
     }
 
+    let resizeTimer;
+    const handleResize = () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 150);
+    };
+    window.addEventListener('resize', handleResize);
+
+
+    const controller = {
+        resize,
+        buildScene,
+        destroy() {
+            clearTimeout(resizeTimer);
+            window.removeEventListener('resize', handleResize);
+            visibilityObserver?.disconnect();
+            delete canvas.__generativeCanvasController;
+        }
+    };
+    canvas.__generativeCanvasController = controller;
     resize();
     draw();
 
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(resize, 150);
-    });
-
-    return { resize, buildScene };
+    return controller;
 }
 
 window.initGenerativeCanvas = initGenerativeCanvas;
@@ -776,7 +842,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const manifest = getManifest();
+        const manifest = getManifest().filter(module => !module.comingSoon);
         const module = await loadModule(moduleId);
 
         if (module) {

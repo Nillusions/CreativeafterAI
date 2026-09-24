@@ -9,6 +9,25 @@ const FIELDNOTES_WORKER_URL = 'https://notion-tools-proxy.alenthomas2898.workers
 function getLocalFieldnotes() {
     return window.FIELDNOTES_DATA || [];
 }
+function cleanRemoteArticle(article) {
+    const id = String(article.id || '').replace(/[^a-zA-Z0-9-]/g, '');
+    const slug = /^[a-zA-Z0-9_-]+$/.test(String(article.slug || '')) ? String(article.slug) : id;
+    return {
+        ...article,
+        id,
+        slug,
+        title: escapeHtml(article.title || 'Untitled Note'),
+        subtitle: escapeHtml(article.subtitle || ''),
+        excerpt: escapeHtml(article.excerpt || ''),
+        date: escapeHtml(article.date || ''),
+        readTime: escapeHtml(article.readTime || ''),
+        category: escapeHtml(article.category || 'Notes'),
+        tags: Array.isArray(article.tags) ? article.tags.map(escapeHtml) : [],
+        color: /^#[0-9a-f]{6}$/i.test(article.color || '') ? article.color : '#C8E64E',
+        coverImage: safeExternalUrl(article.coverImage) || ''
+    };
+}
+
 
 // Fetch all articles (tries Notion Cloudflare Worker first, falls back immediately to local data)
 async function fetchAllFieldnotes() {
@@ -24,7 +43,8 @@ async function fetchAllFieldnotes() {
             if (data.articles && data.articles.length > 0) {
                 // Merge worker articles with local articles to guarantee full rich content
                 const local = getLocalFieldnotes();
-                const merged = data.articles.map(remote => {
+                const merged = data.articles.map(remoteArticle => {
+                    const remote = cleanRemoteArticle(remoteArticle);
                     const match = local.find(l => l.slug === remote.slug || l.id === remote.id);
                     return match ? { ...match, ...remote } : remote;
                 });
@@ -37,9 +57,6 @@ async function fetchAllFieldnotes() {
     return getLocalFieldnotes();
 }
 
-// =========================================
-// HOMEPAGE: RENDER LATEST 4 FIELDNOTES
-// =========================================
 // =========================================
 // HOMEPAGE: RENDER LATEST 4 FIELDNOTES (1+3 WOW LAYOUT)
 // =========================================
@@ -197,6 +214,8 @@ function setupSearchInput() {
 
 function renderArchiveGrid() {
     const grid = document.getElementById('fieldnotes-archive-grid');
+    grid.querySelectorAll('canvas').forEach(canvas => canvas.__generativeCanvasController?.destroy());
+
     const search = document.getElementById('fieldnotes-search-input');
     const term = search ? search.value.trim().toLowerCase() : '';
 
@@ -361,9 +380,14 @@ async function initArticleReader() {
 
     const params = new URLSearchParams(window.location.search);
     const idOrSlug = params.get('id') || params.get('slug');
+    if (!idOrSlug) {
+        window.location.href = 'fieldnotes.html';
+        return;
+    }
+
 
     const articles = await fetchAllFieldnotes();
-    const article = articles.find(a => (a.slug === idOrSlug || a.id === idOrSlug)) || articles[0];
+    const article = articles.find(a => (a.slug === idOrSlug || a.id === idOrSlug));
 
     if (!article) {
         window.location.href = 'fieldnotes.html';
@@ -473,7 +497,7 @@ function copyPromptCard(btn) {
     const content = card ? card.querySelector('.prompt-content').innerText.trim() : '';
     if (!content) return;
 
-    navigator.clipboard.writeText(content).then(() => {
+    copyText(content).then(() => {
         const originalText = btn.innerText;
         btn.innerText = 'Copied ✓';
         btn.classList.add('copied');
@@ -486,7 +510,7 @@ function copyPromptCard(btn) {
 
 // Copy share link helper with toast
 function copyCurrentArticleUrl(btn) {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    copyText(window.location.href).then(() => {
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<span>Copied!</span>`;
         btn.classList.add('copied');

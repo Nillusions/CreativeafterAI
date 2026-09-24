@@ -16,12 +16,26 @@
  * - GET /api/fieldnotes?id=<page_id> -> Returns full article with rendered blocks & images
  */
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch (_) {
+    return '';
+  }
+}
 export default {
   async fetch(request, env, ctx) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type',
     };
 
     if (request.method === 'OPTIONS') {
@@ -52,7 +66,7 @@ export default {
       // 1. Single Fieldnote Page Blocks (Full Article content)
       // -------------------------------------------------------------
       if (isFieldnotes && pageId) {
-        const blocksResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
+        const blocksResponse = await fetch(`https://api.notion.com/v1/blocks/${encodeURIComponent(pageId)}/children?page_size=100`, {
           headers: {
             'Authorization': `Bearer ${NOTION_API_KEY}`,
             'Notion-Version': '2022-06-28',
@@ -74,11 +88,11 @@ export default {
         for (const block of blocksData.results) {
           const type = block.type;
           const text = block[type]?.rich_text ? block[type].rich_text.map(t => {
-            let s = t.plain_text;
+            let s = escapeHtml(t.plain_text);
             if (t.annotations.bold) s = `<strong>${s}</strong>`;
             if (t.annotations.italic) s = `<em>${s}</em>`;
             if (t.annotations.code) s = `<code>${s}</code>`;
-            if (t.href) s = `<a href="${t.href}" target="_blank" rel="noopener noreferrer">${s}</a>`;
+            if (safeHttpUrl(t.href)) s = `<a href="${escapeHtml(safeHttpUrl(t.href))}" target="_blank" rel="noopener noreferrer">${s}</a>`;
             return s;
           }).join('') : '';
 
@@ -106,8 +120,8 @@ export default {
               htmlContent += `<div class="article-callout"><div class="callout-icon">${block.callout.icon?.emoji || '✦'}</div><div class="callout-body">${text}</div></div>`;
               break;
             case 'image':
-              const imgUrl = block.image.file?.url || block.image.external?.url || '';
-              const caption = block.image.caption?.map(c => c.plain_text).join('') || '';
+              const imgUrl = safeHttpUrl(block.image.file?.url || block.image.external?.url || '');
+              const caption = escapeHtml(block.image.caption?.map(c => c.plain_text).join('') || '');
               htmlContent += `<figure class="article-figure"><img src="${imgUrl}" alt="${caption || 'Fieldnote visual'}" class="article-image">${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
               break;
             case 'code':
@@ -118,7 +132,7 @@ export default {
 
         return new Response(JSON.stringify({ html: htmlContent, blocks: blocksData.results }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', ...corsHeaders }
         });
       }
 
@@ -185,13 +199,20 @@ export default {
 
         return new Response(JSON.stringify({ articles }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', ...corsHeaders }
         });
       }
 
       // -------------------------------------------------------------
       // 3. Tools Database Query (Preserved)
       // -------------------------------------------------------------
+      if (!NOTION_DATABASE_ID) {
+        return new Response(JSON.stringify({ error: 'Missing NOTION_DATABASE_ID environment variable' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+
       const notionResponse = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
         method: 'POST',
         headers: {
@@ -248,7 +269,7 @@ export default {
 
       return new Response(JSON.stringify({ tools }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', ...corsHeaders }
       });
     } catch (err) {
       return new Response(JSON.stringify({ error: 'Worker error', details: err.message }), {

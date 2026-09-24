@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
@@ -24,7 +24,7 @@
     <div class="page-transition"></div>
 
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Primary navigation">
         <a href="index.html" class="nav-logo">Creative <span>after AI</span></a>
         <div class="nav-right">
             <div class="nav-links">
@@ -125,7 +125,7 @@
         <div class="tools-search-container reveal">
             <div class="search-input-wrapper">
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="tools-search-input" placeholder="Search tools by name, type, or description..." class="tools-search-input">
+                <input type="search" id="tools-search-input" aria-label="Search AI tools" placeholder="Search tools by name, type, or description..." class="tools-search-input">
             </div>
         </div>
 
@@ -136,15 +136,17 @@
     </section>
 
     <!-- Fieldnotes Section (Full Width with Generative Identity Grid) -->
-    <section class="fieldnotes-section" id="fieldnotes">
+    <section class="modules-section fieldnotes-section" id="fieldnotes">
         <canvas class="particle-canvas" id="fieldnotes-canvas"></canvas>
         <div class="fieldnotes-container">
             <div class="section-header reveal">
-                <div class="editorial-badge">
-                    <span class="pulse-dot"></span>
-                    Dispatches & Long-form
+                <div>
+                    <div class="editorial-badge">
+                        <span class="pulse-dot"></span>
+                        Dispatches & Long-form
+                    </div>
+                    <h2 class="section-title">Fieldnotes</h2>
                 </div>
-                <h2 class="section-title" style="margin-bottom: 8px;">Fieldnotes</h2>
                 <p class="section-subtitle">Tactical essays, system architectures, and observations in creative synthesis</p>
             </div>
 
@@ -168,7 +170,7 @@
             <div class="footer-logo">Creative <span>after AI</span></div>
             <p class="footer-text">
                 A Wknd.prj project by
-                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank"
+                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank" rel="noopener noreferrer"
                     style="color: #C8E64E; text-decoration: underline; text-underline-offset: 3px;">
                     <strong>Alen</strong>
                 </a>.

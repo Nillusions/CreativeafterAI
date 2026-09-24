@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
@@ -24,7 +24,7 @@
     <div class="page-transition"></div>
 
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Primary navigation">
         <a href="index.html" class="nav-logo">Creative <span>after AI</span></a>
         <div class="nav-right">
             <div class="nav-links">
@@ -50,7 +50,8 @@
                 Field<span>notes</span>
             </h1>
             <p class="fieldnotes-hero-subtitle reveal">
-                Practical essays, visual breakdowns, and tactical reflections on using AI as a creative collaborator without sacrificing taste.
+                Practical essays, visual breakdowns, and tactical reflections on using AI as a creative collaborator
+                without sacrificing taste.
             </p>
         </div>
     </header>
@@ -61,7 +62,8 @@
             <!-- Populated dynamically by fieldnotes.js -->
         </div>
         <div class="fieldnotes-search-wrapper">
-            <input type="text" id="fieldnotes-search-input" placeholder="Search fieldnotes by keyword, tag..." class="tools-search-input">
+            <input type="search" id="fieldnotes-search-input" aria-label="Search fieldnotes"
+                placeholder="Search fieldnotes by keyword, tag..." class="tools-search-input">
         </div>
     </div>
 
@@ -83,7 +85,7 @@
             <div class="footer-logo">Creative <span>after AI</span></div>
             <p class="footer-text">
                 A Wknd.prj project by
-                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank"
+                <a href="https://www.linkedin.com/in/alen-thomas/" target="_blank" rel="noopener noreferrer"
                     style="color: #C8E64E; text-decoration: underline; text-underline-offset: 3px;">
                     <strong>Alen</strong>
                 </a>.
@@ -96,7 +98,9 @@
     <script src="fieldnotes-data/manifest.js"></script>
     <script src="fieldnotes.js"></script>
     <script src="app.js"></script>
-    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script>
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+        data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script>
 </body>
 
 </html>
