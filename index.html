@@ -19,7 +19,8 @@
     <meta property="og:title" content="Creative after AI — Master Creativity in the Age of AI">
     <meta property="og:description"
         content="Learn how to harness AI as a creative superpower. Modules on prompt engineering, design execution, visual storytelling, and creative strategy.">
-    <meta property="og:image" content="https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png">
+    <meta property="og:image"
+        content="https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
@@ -29,7 +30,8 @@
     <meta name="twitter:title" content="Creative after AI — Master Creativity in the Age of AI">
     <meta name="twitter:description"
         content="Learn how to harness AI as a creative superpower. Modules on prompt engineering, design execution, visual storytelling, and creative strategy.">
-    <meta name="twitter:image" content="https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png">
+    <meta name="twitter:image"
+        content="https://nillusions.github.io/CreativeafterAI/creative%20after%20ai%20preview.png">
 
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -53,6 +55,8 @@
             "@type": "Person",
             "name": "Alen Thomas",
             "sameAs": "https://www.linkedin.com/in/alen-thomas/"
+         "sameAs": [
+          "https://www.linkedin.com/company/creative-after-ai/",
           }
         },
         {
@@ -119,7 +123,8 @@
                 <a href="#about">About</a>
                 <a href="#modules">Modules</a>
                 <a href="#tools">Tools</a>
-                <a href="fieldnotes.html" class="nav-link-with-badge">Fieldnotes <span class="nav-new-badge">New</span></a>
+                <a href="fieldnotes.html" class="nav-link-with-badge">Fieldnotes <span
+                        class="nav-new-badge">New</span></a>
             </div>
 
         </div>
@@ -209,17 +214,23 @@
             </div>
             <p class="section-subtitle">A curated collection of the best AI tools from our Notion database</p>
         </div>
-        
+
         <div class="tools-search-container reveal">
             <div class="search-input-wrapper">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="search" id="tools-search-input" aria-label="Search AI tools" placeholder="Search tools by name, type, or description..." class="tools-search-input">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="search" id="tools-search-input" aria-label="Search AI tools"
+                    placeholder="Search tools by name, type, or description..." class="tools-search-input">
             </div>
         </div>
 
         <div class="tools-grid" id="tools-grid">
             <!-- Tool cards injected by app.js from Cloudflare Worker -->
-            <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading tools...</div>
+            <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading tools...
+            </div>
         </div>
     </section>
 
@@ -235,18 +246,25 @@
                     </div>
                     <h2 class="section-title">Fieldnotes</h2>
                 </div>
-                <p class="section-subtitle">Tactical essays, system architectures, and observations in creative synthesis</p>
+                <p class="section-subtitle">Tactical essays, system architectures, and observations in creative
+                    synthesis</p>
             </div>
 
             <div class="fieldnotes-showcase" id="latest-fieldnotes-grid">
                 <!-- 1+3 Latest fieldnote cards injected by fieldnotes.js -->
-                <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading fieldnotes...</div>
+                <div class="loader-text" style="width: 100%; text-align: center; color: var(--text-muted);">Loading
+                    fieldnotes...</div>
             </div>
 
             <div style="text-align: center; margin-top: 48px;" class="reveal">
-                <a href="fieldnotes.html" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <a href="fieldnotes.html" class="btn-secondary"
+                    style="display: inline-flex; align-items: center; gap: 8px;">
                     Explore All Fieldnotes
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 16px; height: 16px;">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -271,7 +289,9 @@
     <script src="fieldnotes-data/manifest.js"></script>
     <script src="fieldnotes.js"></script>
     <script src="app.js"></script>
-    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script><!-- End Cloudflare Web Analytics -->
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+        data-cf-beacon='{"token": "e3e96a1bf0604ca78a33b2ebc7d0ba90"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 
 </html>
