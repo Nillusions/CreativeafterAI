@@ -132,7 +132,7 @@ async function fetchAndRenderTools() {
     if (!grid) return;
 
     // REPLACE THIS URL WITH YOUR ACTUAL CLOUDFLARE WORKER URL
-    const WORKER_URL = 'https://notion-tools-proxy.alenthomas2898.workers.dev/';
+    const WORKER_URL = 'https://notion-tools-proxy.alent.workers.dev/';
 
     try {
         const response = await fetch(WORKER_URL);
@@ -151,7 +151,7 @@ async function fetchAndRenderTools() {
             if (props.Description) return props.Description;
             if (props.Summary) return props.Summary;
             if (props.About) return props.About;
-            
+
             // Fallback: find the longest string property that isn't the name/url
             let longestStr = '';
             for (const [key, val] of Object.entries(props)) {
@@ -166,7 +166,7 @@ async function fetchAndRenderTools() {
         const renderCards = (toolsList) => {
             return toolsList.map(tool => {
                 const props = tool.properties || {};
-                
+
                 // Find the name key
                 let nameKey = 'Name';
                 if (!props[nameKey]) {
@@ -174,12 +174,12 @@ async function fetchAndRenderTools() {
                     nameKey = Object.keys(props).find(k => tool.properties[k]?.type === 'title') || 'title';
                 }
                 const name = props[nameKey] || props.title || 'Unknown Tool';
-                
+
                 const description = getDescription(props, nameKey);
-                
+
                 // Try to find a property that looks like a URL (Link, URL, Website, etc.)
                 const url = safeExternalUrl(props.Link || props.URL || props.Website || tool.url);
-                
+
                 // Extract tags if available
                 let tagsHtml = '';
                 if (props.Category) {
@@ -219,7 +219,7 @@ async function fetchAndRenderTools() {
         let isShowingAll = false;
         let currentFilteredTools = data.tools;
         const searchInput = document.getElementById('tools-search-input');
-        
+
         let btnContainer = null;
         if (data.tools.length > 12) {
             const section = document.getElementById('tools');
@@ -229,7 +229,7 @@ async function fetchAndRenderTools() {
             btnContainer.innerHTML = `<button id="see-more-tools-btn" class="btn-secondary" style="cursor: pointer; border: none; font-family: inherit;">See all ${data.tools.length} tools</button>`;
             section.appendChild(btnContainer);
 
-            document.getElementById('see-more-tools-btn').addEventListener('click', function() {
+            document.getElementById('see-more-tools-btn').addEventListener('click', function () {
                 isShowingAll = true;
                 updateRender();
             });
@@ -244,7 +244,7 @@ async function fetchAndRenderTools() {
 
             const limit = (isShowingAll || searchInput.value.trim() !== '') ? currentFilteredTools.length : Math.min(12, currentFilteredTools.length);
             grid.innerHTML = renderCards(currentFilteredTools.slice(0, limit));
-            
+
             observeRevealElements();
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -265,7 +265,7 @@ async function fetchAndRenderTools() {
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase().trim();
-                
+
                 if (term === '') {
                     currentFilteredTools = data.tools;
                 } else {
@@ -274,7 +274,7 @@ async function fetchAndRenderTools() {
                         const nameKey = Object.keys(props).find(k => props[k]?.type === 'title') || 'Name';
                         const name = (props[nameKey] || props.title || '').toString().toLowerCase();
                         const desc = getDescription(props, nameKey).toLowerCase();
-                        
+
                         let tags = '';
                         if (props.Category) {
                             tags += Array.isArray(props.Category) ? props.Category.join(' ').toLowerCase() : props.Category.toString().toLowerCase();
@@ -287,7 +287,7 @@ async function fetchAndRenderTools() {
                         return name.includes(term) || desc.includes(term) || tags.includes(term);
                     });
                 }
-                
+
                 updateRender();
             });
         }
